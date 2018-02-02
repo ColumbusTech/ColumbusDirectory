@@ -1,12 +1,15 @@
 #ifdef _WIN32
+	#define COLUMBUS_PLATFORM_WINDOWS
 	#include <windows.h>
 #endif
 
 #ifdef _WIN64
+	#define COLUMBUS_PLATFORM_WINDOWS
 	#include <windows.h>
 #endif
 
 #ifdef __linux
+	#define COLUMBUS_PLATFORM_LINUX
 	#include <dirent.h>
 	#include <unistd.h>
 	#include <sys/stat.h>
@@ -35,24 +38,38 @@ namespace Columbus
 
 	std::string Directory::getCurrent()
 	{
-		#ifdef __linux
-			char dir[512];
-			getcwd(dir, 512);
+		#ifdef COLUMBUS_PLATFORM_LINUX
+			char dir[FILENAME_MAX];
+			getcwd(dir, FILENAME_MAX);
+			return dir;
+		#endif
+
+		#ifdef COLUMBUS_PLATFORM_WINDOWS
+			char dir[MAX_PATH];
+			GetModuleFileName(NULL, dir, MAX_PATH);
 			return dir;
 		#endif
 	}
 
 	bool Directory::create(const std::string aPath)
 	{
-		#ifdef __linux
+		#ifdef COLUMBUS_PLATFORM_LINUX
 			return mkdir(aPath.c_str(), 0777) ? false : true;
+		#endif
+
+		#ifdef COLUMBUS_PLATFORM_WINDOWS
+			return CreateFolder(aPath.c_str(), 4555);
 		#endif
 	}
 
 	bool Directory::remove(const std::string aPath)
 	{
-		#ifdef __linux
+		#ifdef COLUMBUS_PLATFORM_LINUX
 			return rmdir(aPath.c_str()) ? false : true;
+		#endif
+
+		#ifdef COLUMBUS_PLATFORM_WINDOWS
+			return DeleteFolder(aPath.c_str());
 		#endif
 	}
 
@@ -60,7 +77,7 @@ namespace Columbus
 	{
 		std::vector<std::string> ret;
 
-		#ifdef __linux
+		#ifdef COLUMBUS_PLATFORM_LINUX
 			DIR* dir = opendir(aPath.c_str());
 			if (dir == NULL) return ret;
 
@@ -84,7 +101,8 @@ namespace Columbus
 
 }
 
-
+#undef COLUMBUS_PLATFORM_WINDOWS
+#undef COLUMBUS_PLATFORM_LINUX
 
 
 
