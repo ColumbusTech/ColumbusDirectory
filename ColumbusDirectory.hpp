@@ -16,8 +16,10 @@
 	#include <sys/types.h>
 #endif
 
+#include <cstdlib>
 #include <string>
 #include <vector>
+#include <iostream>
 
 namespace Columbus
 {
@@ -45,8 +47,10 @@ namespace Columbus
 		#endif
 
 		#ifdef COLUMBUS_PLATFORM_WINDOWS
+			wchar_t wdir[MAX_PATH];
 			char dir[MAX_PATH];
-			GetModuleFileName(NULL, dir, MAX_PATH);
+			GetCurrentDirectory(MAX_PATH, wdir);
+			wcstombs(dir, wdir, MAX_PATH);
 			return dir;
 		#endif
 	}
@@ -58,7 +62,9 @@ namespace Columbus
 		#endif
 
 		#ifdef COLUMBUS_PLATFORM_WINDOWS
-			return CreateFolder(aPath.c_str(), 4555);
+			wchar_t* name = new wchar_t[aPath.size()];
+			mbstowcs(name, aPath.c_str(), aPath.size() * 2);
+			return CreateDirectory(name, NULL);
 		#endif
 	}
 
@@ -69,7 +75,9 @@ namespace Columbus
 		#endif
 
 		#ifdef COLUMBUS_PLATFORM_WINDOWS
-			return DeleteFolder(aPath.c_str());
+			wchar_t* name = new wchar_t[aPath.size()];
+			mbstowcs(name, aPath.c_str(), aPath.size() * 2);
+			return RemoveDirectory(name);
 		#endif
 	}
 
@@ -89,6 +97,30 @@ namespace Columbus
 			}
 
 			closedir(dir);
+		#endif
+
+		#ifdef COLUMBUS_PLATFORM_WINDOWS
+			HANDLE hFind;
+			WIN32_FIND_DATA data;
+
+			wchar_t* path = new wchar_t[aPath.size()];
+			char file[MAX_PATH];
+			mbstowcs(path, aPath.c_str(), aPath.size() * 2);
+
+			std::wstring str = path;
+			str += L"/*.*";
+
+			hFind = FindFirstFile(str.c_str(), &data);
+
+			if (hFind != INVALID_HANDLE_VALUE)
+			{
+				do
+				{
+					wcstombs(file, data.cFileName, MAX_PATH);
+					ret.push_back(file);
+				} while (FindNextFile(hFind, &data));
+				FindClose(hFind);
+			}
 		#endif
 
 		return ret;
