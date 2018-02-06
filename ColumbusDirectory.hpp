@@ -12,11 +12,13 @@
 	#define COLUMBUS_PLATFORM_LINUX
 	#include <dirent.h>
 	#include <unistd.h>
+	#include <fcntl.h>
 	#include <sys/stat.h>
 	#include <sys/types.h>
 #endif
 
 #include <cstdlib>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -30,8 +32,10 @@ namespace Columbus
 		Directory() {}
 
 		static std::string getCurrent();
-		static bool create(const std::string aPath);
-		static bool remove(const std::string aPath);
+		static bool createDirectory(const std::string aPath);
+		static bool createFile(const std::string aPath);
+		static bool removeDirectory(const std::string aPath);
+		static bool removeFile(const std::string aPath);
 		static std::vector<std::string> read(const std::string aPath);
 		static std::vector<std::string> readCurrent();
 
@@ -41,8 +45,8 @@ namespace Columbus
 	std::string Directory::getCurrent()
 	{
 		#ifdef COLUMBUS_PLATFORM_LINUX
-			char dir[FILENAME_MAX];
-			getcwd(dir, FILENAME_MAX);
+			char dir[4096];
+			getcwd(dir, 4096);
 			return dir;
 		#endif
 
@@ -53,12 +57,14 @@ namespace Columbus
 			wcstombs(dir, wdir, MAX_PATH);
 			return dir;
 		#endif
+
+		return "";
 	}
 
-	bool Directory::create(const std::string aPath)
+	bool Directory::createDirectory(const std::string aPath)
 	{
 		#ifdef COLUMBUS_PLATFORM_LINUX
-			return mkdir(aPath.c_str(), 0777) ? false : true;
+			return mkdir(aPath.c_str(), 0777) == 0;
 		#endif
 
 		#ifdef COLUMBUS_PLATFORM_WINDOWS
@@ -66,12 +72,23 @@ namespace Columbus
 			mbstowcs(name, aPath.c_str(), aPath.size() * 2);
 			return CreateDirectory(name, NULL);
 		#endif
+
+		return false;
 	}
 
-	bool Directory::remove(const std::string aPath)
+	bool Directory::createFile(const std::string aPath)
 	{
 		#ifdef COLUMBUS_PLATFORM_LINUX
-			return rmdir(aPath.c_str()) ? false : true;
+			return open(aPath.c_str(), O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, S_IRWXU) >= 0;
+		#endif
+
+		return false;
+	}
+
+	bool Directory::removeDirectory(const std::string aPath)
+	{
+		#ifdef COLUMBUS_PLATFORM_LINUX
+			return rmdir(aPath.c_str()) == 0;
 		#endif
 
 		#ifdef COLUMBUS_PLATFORM_WINDOWS
@@ -79,6 +96,17 @@ namespace Columbus
 			mbstowcs(name, aPath.c_str(), aPath.size() * 2);
 			return RemoveDirectory(name);
 		#endif
+
+		return false;
+	}
+
+	bool Directory::removeFile(const std::string aPath)
+	{
+		#ifdef COLUMBUS_PLATFORM_LINUX
+			return remove(aPath.c_str()) == 0;
+		#endif
+
+		return false;
 	}
 
 	std::vector<std::string> Directory::read(const std::string aPath)
