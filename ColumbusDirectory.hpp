@@ -3,11 +3,6 @@
 	#include <windows.h>
 #endif
 
-#ifdef _WIN64
-	#define COLUMBUS_PLATFORM_WINDOWS
-	#include <windows.h>
-#endif
-
 #ifdef __linux
 	#define COLUMBUS_PLATFORM_LINUX
 	#include <dirent.h>
