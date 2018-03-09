@@ -30,6 +30,8 @@ namespace Columbus
 		static bool createFile(const std::string aPath);
 		static bool removeDirectory(const std::string aPath);
 		static bool removeFile(const std::string aPath);
+		static bool renameDirectory(const std::string aOld, const std::string aNew);
+		static bool renameFile(const std::string aOld, const std::string aNew);
 		static std::vector<std::string> read(const std::string aPath);
 		static std::vector<std::string> readCurrent();
 
@@ -101,6 +103,16 @@ namespace Columbus
 		#endif
 
 		return false;
+	}
+
+	bool Directory::renameDirectory(const std::string aOld, const std::string aNew)
+	{
+		return rename(aOld.c_str(), aNew.c_str()) == 0;
+	}
+
+	bool Directory::renameFile(const std::string aOld, const std::string aNew)
+	{
+		return rename(aOld.c_str(), aNew.c_str()) == 0;
 	}
 
 	std::vector<std::string> Directory::read(const std::string aPath)
