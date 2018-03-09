@@ -20,25 +20,24 @@
 namespace Columbus
 {
 
-	class Directory
+	class Filesystem
 	{
 	public:
-		Directory() {}
+		Filesystem() {}
 
 		static std::string getCurrent();
 		static bool createDirectory(const std::string aPath);
 		static bool createFile(const std::string aPath);
 		static bool removeDirectory(const std::string aPath);
 		static bool removeFile(const std::string aPath);
-		static bool renameDirectory(const std::string aOld, const std::string aNew);
-		static bool renameFile(const std::string aOld, const std::string aNew);
+		static bool rename(const std::string aOld, const std::string aNew);
 		static std::vector<std::string> read(const std::string aPath);
 		static std::vector<std::string> readCurrent();
 
-		~Directory() {}
+		~Filesystem() {}
 	};
 
-	std::string Directory::getCurrent()
+	std::string Filesystem::getCurrent()
 	{
 		#ifdef COLUMBUS_PLATFORM_LINUX
 			char dir[4096];
@@ -57,7 +56,7 @@ namespace Columbus
 		return "";
 	}
 
-	bool Directory::createDirectory(const std::string aPath)
+	bool Filesystem::createDirectory(const std::string aPath)
 	{
 		#ifdef COLUMBUS_PLATFORM_LINUX
 			return mkdir(aPath.c_str(), 0777) == 0;
@@ -72,7 +71,7 @@ namespace Columbus
 		return false;
 	}
 
-	bool Directory::createFile(const std::string aPath)
+	bool Filesystem::createFile(const std::string aPath)
 	{
 		#ifdef COLUMBUS_PLATFORM_LINUX
 			return open(aPath.c_str(), O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, S_IRWXU) >= 0;
@@ -81,7 +80,7 @@ namespace Columbus
 		return false;
 	}
 
-	bool Directory::removeDirectory(const std::string aPath)
+	bool Filesystem::removeDirectory(const std::string aPath)
 	{
 		#ifdef COLUMBUS_PLATFORM_LINUX
 			return rmdir(aPath.c_str()) == 0;
@@ -96,7 +95,7 @@ namespace Columbus
 		return false;
 	}
 
-	bool Directory::removeFile(const std::string aPath)
+	bool Filesystem::removeFile(const std::string aPath)
 	{
 		#ifdef COLUMBUS_PLATFORM_LINUX
 			return remove(aPath.c_str()) == 0;
@@ -105,17 +104,18 @@ namespace Columbus
 		return false;
 	}
 
-	bool Directory::renameDirectory(const std::string aOld, const std::string aNew)
+	//INTERNAL USE
+	static int rnm(const std::string aOld, const std::string aNew)
 	{
-		return rename(aOld.c_str(), aNew.c_str()) == 0;
+		return rename(aOld.c_str(), aNew.c_str());
 	}
 
-	bool Directory::renameFile(const std::string aOld, const std::string aNew)
+	bool Filesystem::rename(const std::string aOld, const std::string aNew)
 	{
-		return rename(aOld.c_str(), aNew.c_str()) == 0;
+		return rnm(aOld, aNew) == 0;
 	}
 
-	std::vector<std::string> Directory::read(const std::string aPath)
+	std::vector<std::string> Filesystem::read(const std::string aPath)
 	{
 		std::vector<std::string> ret;
 
@@ -160,7 +160,7 @@ namespace Columbus
 		return ret;
 	}
 
-	std::vector<std::string> Directory::readCurrent()
+	std::vector<std::string> Filesystem::readCurrent()
 	{
 		return read(getCurrent());
 	}
